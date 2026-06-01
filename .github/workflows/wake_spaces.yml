@@ -17,7 +17,7 @@ jobs:
           # 定义你的三个空间的 App 直连地址
           SPACE_1="https://chaoma0108-spleeter.hf.space"
           SPACE_2="https://chaoma0108-mynew.hf.space"
-          SPACE_3="https://chaoma0108-test.hf.space"
+          SPACE_3="https://chaoma0108-Ausep.hf.space"
           
           echo "========================================="
           echo "🚀 开始执行 3 个空间的唤醒任务..."
@@ -38,7 +38,7 @@ jobs:
           echo "-----------------------------------------"
           
           # 3. 唤醒第三个空间 (test)
-          echo "正在请求 Test 空间..."
+          echo "正在请求 Ausep 空间..."
           CODE_3=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_3)
           echo "Test 返回状态码: $CODE_3"
           
