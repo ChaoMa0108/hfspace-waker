@@ -1,0 +1,41 @@
+name: Auto Wake Up HF Spaces
+
+on:
+  schedule:
+    # 每天北京时间早上 8:00 自动运行一次
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 极其重要：允许你手动点击按钮运行测试
+
+jobs:
+  wake-up-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Curl Requests
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # 1. 统一定义你的两个空间的 App 直连地址（注意是 .hf.space 结尾）
+          SPACE_1="https://chaoma0108-spleeter.hf.space"
+          SPACE_2="https://chaoma0108-mynew.hf.space"
+          SPACE_3="https://chaoma0108-test.hf.space"
+          
+          echo "========================================="
+          echo "🚀 开始执行唤醒任务..."
+          echo "========================================="
+          
+          # 唤醒第一个空间
+          echo "正在请求 Spleeter 空间..."
+          CODE_1=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_1)
+          echo "Spleeter 返回状态码: $CODE_1"
+          
+          echo "-----------------------------------------"
+          
+          # 唤醒第二个空间
+          echo "正在请求 Mynew 空间..."
+          CODE_2=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_2)
+          echo "Mynew 返回状态码: $CODE_2"
+          
+          echo "========================================="
+          echo "🎉 所有的唤醒信号已成功发出！"
+          echo "提示：如果状态码是 503，说明空间正在冷启动，请在 Hugging Face 网页端耐心等待 2-5 分钟即可。"
+          echo "========================================="
