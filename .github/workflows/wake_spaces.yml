@@ -23,14 +23,14 @@ jobs:
           echo "📊 今日独创随机排期表（从北京时间早上 8:00 起算）："
           echo "Spleeter 空间将在 $DELAY_A 秒后唤醒 (约 $(echo "scale=2; $DELAY_A/3600" | bc) 小时)"
           echo "Mynew    空间将在 $DELAY_B 秒后唤醒 (约 $(echo "scale=2; $DELAY_B/3600" | bc) 小时)"
-          echo "Test     空间将在 $DELAY_C 秒后唤醒 (约 $(echo "scale=2; $DELAY_C/3600" | bc) 小时)"
+          echo "Ausep     空间将在 $DELAY_C 秒后唤醒 (约 $(echo "scale=2; $DELAY_C/3600" | bc) 小时)"
           echo "========================================="
           
           # 2. 将空间地址和它们对应的绝对延迟时间放入临时列表，并按时间从小到大排序
           # 这样能确保谁的随机时间短，谁就先执行，不会漏掉任何一个
           SPACE_A="https://chaoma0108-spleeter.hf.space"
           SPACE_B="https://chaoma0108-mynew.hf.space"
-          SPACE_C="https://chaoma0108-test.hf.space"
+          SPACE_C="https://chaoma0108-Ausep.hf.space"
           
           # 格式：绝对秒数|空间名字|URL
           (
