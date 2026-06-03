@@ -1,48 +1,79 @@
-name: Auto Wake Up 3 HF Spaces
+name: Super Secure 3-Space Independent Random Wake Up
 
 on:
   schedule:
-    # 每天北京时间早上 8:00 自动运行一次
+    # 每天北京时间早上 8:00 叫醒 GitHub 脚本（作为一天的计时起点）
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允许你手动点击按钮运行测试
+  workflow_dispatch: # 允许手动点击测试
 
 jobs:
   wake-up-task:
     runs-on: ubuntu-latest
     steps:
-      - name: Execute Curl Requests
+      - name: Independent Randomized Execution
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # 定义你的三个空间的 App 直连地址
-          SPACE_1="https://chaoma0108-spleeter.hf.space"
-          SPACE_2="https://chaoma0108-mynew.hf.space"
-          SPACE_3="https://chaoma0108-Ausep.hf.space"
+          # 1. 为三个空间分别生成 0 到 18000 秒（0 到 5 小时）之间的独立随机总延迟
+          DELAY_A=$(( RANDOM % 18001 ))
+          DELAY_B=$(( RANDOM % 18001 ))
+          DELAY_C=$(( RANDOM % 18001 ))
           
           echo "========================================="
-          echo "🚀 开始执行 3 个空间的唤醒任务..."
+          echo "📊 今日独创随机排期表（从北京时间早上 8:00 起算）："
+          echo "Spleeter 空间将在 $DELAY_A 秒后唤醒 (约 $(echo "scale=2; $DELAY_A/3600" | bc) 小时)"
+          echo "Mynew    空间将在 $DELAY_B 秒后唤醒 (约 $(echo "scale=2; $DELAY_B/3600" | bc) 小时)"
+          echo "Test     空间将在 $DELAY_C 秒后唤醒 (约 $(echo "scale=2; $DELAY_C/3600" | bc) 小时)"
           echo "========================================="
           
-          # 1. 唤醒第一个空间
-          echo "正在请求 Spleeter 空间..."
-          CODE_1=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_1)
-          echo "Spleeter 返回状态码: $CODE_1"
+          # 2. 将空间地址和它们对应的绝对延迟时间放入临时列表，并按时间从小到大排序
+          # 这样能确保谁的随机时间短，谁就先执行，不会漏掉任何一个
+          SPACE_A="https://chaoma0108-spleeter.hf.space"
+          SPACE_B="https://chaoma0108-mynew.hf.space"
+          SPACE_C="https://chaoma0108-test.hf.space"
           
-          echo "-----------------------------------------"
+          # 格式：绝对秒数|空间名字|URL
+          (
+            echo "$DELAY_A|Spleeter|$SPACE_A"
+            echo "$DELAY_B|Mynew|$SPACE_B"
+            echo "$DELAY_C|Test|$SPACE_C"
+          ) | sort -n > schedule.txt
           
-          # 2. 唤醒第二个空间
-          echo "正在请求 Mynew 空间..."
-          CODE_2=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_2)
-          echo "Mynew 返回状态码: $CODE_2"
+          # 3. 定义一个分段睡眠保活函数，防止 GitHub 误杀卡死的任务
+          safe_sleep() {
+            local seconds=$1
+            local remaining=$seconds
+            while [ $remaining -gt 1800 ]; do
+              echo "💤 正在静默等待中，本阶段还剩 $remaining 秒..."
+              sleep 1800
+              remaining=$(( remaining - 1800 ))
+            done
+            if [ $remaining -gt 0 ]; then
+              sleep $remaining
+            fi
+          }
           
-          echo "-----------------------------------------"
+          # 4. 依次执行排期任务
+          CURRENT_TIME=0
+          while IFS='|' read -r target_time space_name space_url; do
+            # 计算当前需要睡眠的相对差值
+            SLEEP_DURATION=$(( target_time - CURRENT_TIME ))
+            
+            if [ $SLEEP_DURATION -gt 0 ]; then
+              echo ""
+              echo "⏳ [排期规划] 距离唤醒 [$space_name] 还需要等待 $SLEEP_DURATION 秒..."
+              safe_sleep $SLEEP_DURATION
+            fi
+            
+            echo "🚀 [执行唤醒] 正在请求 $space_name 空间..."
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $space_url)
+            echo "👉 $space_name 返回状态码: $CODE"
+            
+            # 更新当前已过去的时间锚点
+            CURRENT_TIME=$target_time
+          done < schedule.txt
           
-          # 3. 唤醒第三个空间 (test)
-          echo "正在请求 Ausep 空间..."
-          CODE_3=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $HF_TOKEN" $SPACE_3)
-          echo "Test 返回状态码: $CODE_3"
-          
+          echo ""
           echo "========================================="
-          echo "🎉 所有 3 个空间的唤醒信号已成功发出！"
-          echo "提示：状态码如果是 503 说明空间正在冷启动，属于正常现象，静候 2-5 分钟即可。"
+          echo "🎉 今日 3 个空间各自独立的随机唤醒任务圆满结束！"
           echo "========================================="
